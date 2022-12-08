@@ -7,11 +7,11 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigation } from "@react-navigation/native";
 import axios from "axios";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { PROFILE_SCREEN, API, API_LOGIN } from "../constants";
+import { PROFILE_SCREEN, API, API_LOGIN, API_SIGNUP } from "../constants";
 
 export default function AuthScreen() {
   const navigation = useNavigation();
@@ -19,6 +19,35 @@ export default function AuthScreen() {
   const [password, setPassword] = useState("");
   const [errorText, setErrorText] = useState("");
   const [loading, setLoading] = useState(false);
+  const [isLoginScreen, setIsLoginScreen] = useState(true);
+  const [confirmPassword, setConfirmPassword] = useState("");
+
+  useEffect(() => {
+    return () => setLoading(false);
+  }, []);
+
+  async function signUp() {
+    setLoading(true);
+    if (password != confirmPassword) {
+      setErrorText("Your passwords don't match. Check and try again.");
+    } else {
+      try {
+        const response = await axios.post(API + API_SIGNUP, {
+          username,
+          password,
+        });
+        if (response.data.Error) {
+          // We have an error message for if the user already exists
+          setErrorText(response.data.Error);
+        } else {
+          login();
+        }
+      } catch (error) {
+        console.log("Failed logging in. Error: ", error.response);
+        setErrorText(error.response.data.description);
+      }
+    }
+  }
 
   async function login() {
     setErrorText("");
