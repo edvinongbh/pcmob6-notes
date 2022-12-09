@@ -23,7 +23,7 @@ export default function AuthScreen() {
   const [confirmPassword, setConfirmPassword] = useState("");
 
   useEffect(() => {
-    return () => setLoading(false);
+    return () => setLoading(true);
   }, []);
 
   async function signUp() {
@@ -68,8 +68,9 @@ export default function AuthScreen() {
   }
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Login to your account</Text>
-
+      <Text style={styles.title}>
+        {isLoginScreen ? "Login to your account" : "Register new account"}
+      </Text>
       <TextInput
         style={styles.inputView}
         placeholder="Email"
@@ -85,17 +86,42 @@ export default function AuthScreen() {
         onChangeText={(pw) => setPassword(pw)}
       />
 
+      {!isLoginScreen && (
+        <TextInput
+          style={styles.inputView}
+          placeholder="Password Confirm"
+          secureTextEntry={true}
+          value={confirmPassword}
+          onChangeText={(pw) => setConfirmPassword(pw)}
+        />
+      )}
+
       <TouchableOpacity
         style={styles.button}
         onPress={async () => {
-          await login();
+          isLoginScreen ? await login() : await signUp();
         }}
       >
         {loading ? (
           <ActivityIndicator style={styles.buttonText} />
         ) : (
-          <Text style={styles.buttonText}>Login</Text>
+          <Text style={styles.buttonText}>
+            {isLoginScreen ? "Login" : "Register"}
+          </Text>
         )}
+      </TouchableOpacity>
+
+      <TouchableOpacity
+        onPress={() => {
+          setIsLoginScreen(!isLoginScreen);
+          setErrorText("");
+        }}
+      >
+        <Text style={styles.switchText}>
+          {isLoginScreen
+            ? "No account? Sign up now."
+            : "Already have an account? Log in here."}
+        </Text>
       </TouchableOpacity>
 
       <Text style={styles.errorText}>{errorText}</Text>
@@ -104,6 +130,11 @@ export default function AuthScreen() {
 }
 
 const styles = StyleSheet.create({
+  switchText: {
+    fontSize: 20,
+    marginTop: 20,
+    color: "gray",
+  },
   errorText: {
     marginTop: 20,
     fontSize: 15,
