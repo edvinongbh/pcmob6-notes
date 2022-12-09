@@ -3,12 +3,22 @@ import { NavigationContainer } from "@react-navigation/native";
 import { createStackNavigator } from "@react-navigation/stack";
 import React, { useEffect, useState } from "react";
 import { ActivityIndicator, StatusBar, StyleSheet, View } from "react-native";
+import HomeStack from "./components/HomeStack";
 import AuthScreen from "./screens/AuthScreen";
-import ProfileScreen from "./screens/ProfileScreen";
-import { AUTH_SCREEN, PROFILE_SCREEN } from "./constants";
+import { AUTH_SCREEN, HOME_STACK } from "./constants";
 const Stack = createStackNavigator();
+import { Provider } from "react-redux";
+import store from "./store";
 
 export default function App() {
+  return (
+    <Provider store={store}>
+      <AppSource />
+    </Provider>
+  );
+}
+
+function AppSource() {
   const [loading, setLoading] = useState(true);
   const [loggedIn, setLoggedIn] = useState(false);
 
@@ -32,14 +42,14 @@ export default function App() {
     <NavigationContainer>
       <StatusBar />
       <Stack.Navigator
-        initialRouteName={loggedIn ? PROFILE_SCREEN : AUTH_SCREEN}
+        initialRouteName={loggedIn ? HOME_STACK : AUTH_SCREEN}
         screenOptions={{
           animationEnabled: false,
           headerShown: false,
         }}
       >
         <Stack.Screen component={AuthScreen} name={AUTH_SCREEN} />
-        <Stack.Screen component={ProfileScreen} name={PROFILE_SCREEN} />
+        <Stack.Screen component={HomeStack} name={HOME_STACK} />
       </Stack.Navigator>
     </NavigationContainer>
   );
