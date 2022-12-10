@@ -32,6 +32,9 @@ export default function NotesScreenAdd() {
           title: noteTitle,
           content: noteBody,
         };
+        //dispatch = send
+        // addNewPost = action/message
+        // post = payload/data
         await dispatch(addNewPost(post));
       } catch (error) {
         console.error("Failed to save the post: ", error);
