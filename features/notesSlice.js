@@ -1,7 +1,14 @@
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
-import axios from "axios";
-import { API, API_CREATE, API_POSTS, API_STATUS } from "../constants";
+import { API_STATUS } from "../constants";
+import {
+  collection,
+  deleteDoc,
+  doc,
+  getDocs,
+  setDoc,
+  updateDoc,
+} from "firebase/firestore";
+import { db } from "../firebase";
 
 const initialState = {
   posts: [],
@@ -10,53 +17,34 @@ const initialState = {
 };
 
 export const fetchPosts = createAsyncThunk("notes/fetchPosts", async () => {
-  const token = await AsyncStorage.getItem("token");
-  const response = await axios.get(API + API_POSTS, {
-    headers: { Authorization: `JWT ${token}` },
+  const querySnapshot = await getDocs(collection(db, "notes"));
+  const notes = querySnapshot.docs.map((doc) => {
+    // return { id: ' sUzDhXjaE8J26lIuWzI7', title: 'Firestore Redux' , content: 'World'}
+    return { id: doc.id, ...doc.data() };
   });
-  return response.data;
+  return notes;
 });
 
 export const addNewPost = createAsyncThunk(
   "notes/addNewPost",
   async (newPost) => {
-    // newpost = {id: "2", title: "good", content: "night"}
-    const token = await AsyncStorage.getItem("token");
-    const response = await axios.post(API + API_CREATE, newPost, {
-      headers: { Authorization: `JWT ${token}` },
-    });
-    return response.data;
-    // respone.data = [
-    // {id:"1", title: "helloo", content: "world"},
-    // {id:"2", title: "good", content: "night"},
-    // ]
+    await setDoc(doc(db, "notes", newPost.id), newPost);
+    return newPost;
   }
 );
 
 export const updatePostThunk = createAsyncThunk(
-  "posts/updatePost",
+  "notes/updatePost",
   async (updatedPost) => {
-    // updatePost = {id: "2", title: "good", content: "night"}
-    const token = await AsyncStorage.getItem("token");
-    const response = await axios.put(
-      // url.com/posts/2
-      API + API_POSTS + "/" + updatedPost.id,
-      updatedPost,
-      {
-        headers: { Authorization: `JWT ${token}` },
-      }
-    );
-    return response.data;
+    await updateDoc(doc(db, "notes", updatedPost.id), updatedPost);
+    return updatedPost;
   }
 );
 
 export const deletePostThunk = createAsyncThunk(
   "posts/deletePost",
   async (id) => {
-    const token = await AsyncStorage.getItem("token");
-    await axios.delete(API + API_POSTS + `/${id}`, {
-      headers: { Authorization: `JWT ${token}` },
-    });
+    await deleteDoc(doc(db, "notes", id));
     return id;
   }
 );
@@ -106,12 +94,15 @@ const notesSlice = createSlice({
         // const title = action.payload.title
         // const content = action.payload.content
 
-        const { id, title, content } = action.payload;
-        const existingPost = state.posts.find((post) => post.id === id);
-        if (existingPost) {
-          existingPost.title = title;
-          existingPost.content = content;
-        }
+        const { id } = action.payload;
+        // const id = action.payload.id
+        const posts = state.posts;
+        const post = posts.find((post) => post.id === id);
+        // const post = {id: "12dsafsd", ....}
+        const postIndex = posts.indexOf(post);
+        // const postIndex = 1
+        // if we have an index of the post, lets update the whole post
+        if (~postIndex) posts[postIndex] = action.payload;
       })
 
       .addCase(deletePostThunk.fulfilled, (state, action) => {
