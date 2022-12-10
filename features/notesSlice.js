@@ -32,6 +32,20 @@ export const addNewPost = createAsyncThunk(
     // ]
   }
 );
+export const updatePostThunk = createAsyncThunk(
+  "posts/updatePost",
+  async (updatedPost) => {
+    const token = await AsyncStorage.getItem("token");
+    const response = await axios.put(
+      API + API_POSTS + "/" + updatedPost.id,
+      updatedPost,
+      {
+        headers: { Authorization: `JWT ${token}` },
+      }
+    );
+    return response.data;
+  }
+);
 
 const notesSlice = createSlice({
   name: "notes",
@@ -72,6 +86,14 @@ const notesSlice = createSlice({
         // {id: "1", title: "hello", content: "world"}
         // {id: "2", title: "good", content: "night"}
         // ]
+      })
+      .addCase(updatePostThunk.fulfilled, (state, action) => {
+        const { id, title, content } = action.payload;
+        const existingPost = state.posts.find((post) => post.id === id);
+        if (existingPost) {
+          existingPost.title = title;
+          existingPost.content = content;
+        }
       });
   },
 });
