@@ -32,11 +32,14 @@ export const addNewPost = createAsyncThunk(
     // ]
   }
 );
+
 export const updatePostThunk = createAsyncThunk(
   "posts/updatePost",
   async (updatedPost) => {
+    // updatePost = {id: "2", title: "good", content: "night"}
     const token = await AsyncStorage.getItem("token");
     const response = await axios.put(
+      // url.com/posts/2
       API + API_POSTS + "/" + updatedPost.id,
       updatedPost,
       {
@@ -44,6 +47,17 @@ export const updatePostThunk = createAsyncThunk(
       }
     );
     return response.data;
+  }
+);
+
+export const deletePostThunk = createAsyncThunk(
+  "posts/deletePost",
+  async (id) => {
+    const token = await AsyncStorage.getItem("token");
+    await axios.delete(API + API_POSTS + `/${id}`, {
+      headers: { Authorization: `JWT ${token}` },
+    });
+    return id;
   }
 );
 
@@ -88,12 +102,22 @@ const notesSlice = createSlice({
         // ]
       })
       .addCase(updatePostThunk.fulfilled, (state, action) => {
+        // action.payload = {id: "2", title: "good", content: "night"}
+        // const title = action.payload.title
+        // const content = action.payload.content
+
         const { id, title, content } = action.payload;
         const existingPost = state.posts.find((post) => post.id === id);
         if (existingPost) {
           existingPost.title = title;
           existingPost.content = content;
         }
+      })
+
+      .addCase(deletePostThunk.fulfilled, (state, action) => {
+        const id = action.payload;
+        const updatedPosts = state.posts.filter((item) => item.id !== id);
+        state.posts = updatedPosts;
       });
   },
 });
